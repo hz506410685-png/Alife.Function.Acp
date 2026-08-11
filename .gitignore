@@ -1,0 +1,22 @@
+﻿# Build artifacts
+bin/
+obj/
+compile-check/
+*.dll
+*.pdb
+
+# Alife runtime
+Runtime/
+Storage/
+
+# Tooling
+.vs/
+.idea/
+*.user
+
+# Packaging
+*.zip
+
+# OS
+Thumbs.db
+.DS_Store
