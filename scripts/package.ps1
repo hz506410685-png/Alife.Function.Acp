@@ -9,8 +9,8 @@ $repoRoot = Split-Path -Parent $PSScriptRoot
 $pluginDir = Join-Path $repoRoot "Alife.Function.Acp"
 $manifest = Get-Content (Join-Path $pluginDir "manifest.json") -Raw | ConvertFrom-Json
 $version = $manifest.Version
-$zipName = "Alife.Function.Acp-$version.zip"
-$outDir = Join-Path $repoRoot "dist"
+$zipName = "$version.zip"
+$outDir = $pluginDir
 New-Item -ItemType Directory -Force -Path $outDir | Out-Null
 $zipPath = Join-Path $outDir $zipName
 
@@ -25,3 +25,4 @@ try {
 } finally {
     Remove-Item -LiteralPath $tmp -Recurse -Force -ErrorAction SilentlyContinue
 }
+
