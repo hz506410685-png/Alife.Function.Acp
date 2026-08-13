@@ -1,4 +1,4 @@
-﻿# Alife.Function.Acp
+# Alife.Function.Acp
 
 让 [Alife](https://github.com/BDFFZI/Alife)（露露）通过 **Agent Client Protocol (ACP)** 指挥本机编码 agent（如 Codex、Claude 等），成为你的「项目经理」。
 
@@ -15,7 +15,7 @@
   - `催活`：任务超时后取回进度 / 继续等待
   - `审批`：agent 请求权限时，露露决定同意或拒绝
   - `收回`：取消并关闭会话（停止任务）
-- **持久化会话**：每个会话存为 JSON，命名会话可跨重启恢复上下文
+- **固定会话窗口**：不指定会话名时默认复用同一会话（配置 `DefaultSessionName`），不再每次开新窗口；持久化会话跨重启恢复上下文
 - **多 agent 配置**：同一插件可配置多个 ACP agent（默认 Codex via `codex-acp`）
 - **安全设计**
   - 工作目录**白名单**（`AllowedWorkDirs`），目录穿越防护
@@ -151,7 +151,7 @@ $toolDir = "C:\Users\<you>\Documents\Alife\Storage\Tools\codex-acp"
 |---|---|---|
 | `agent_list` | OneShot | 列出已配置 agent 及其运行状态 |
 | `agent_start` | OneShot | 启动并初始化 agent（懒启动，派活时也会自动启动） |
-| `派活` | Content | 新建/复用命名会话 + 发送任务 + 等待结果 |
+| `派活` | Content | 复用固定/命名会话（同一窗口）+ 发送任务 + 等待结果 |
 | `催活` | OneShot | 取回超时任务的进度 / 继续等待 |
 | `审批` | OneShot | 处理权限请求（同意 / 拒绝） |
 | `收回` | OneShot | 取消并关闭会话 |

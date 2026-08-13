@@ -33,6 +33,9 @@ public class AcpConfig
     /// <summary>默认权限策略：operator（露露审批）/ allow_readonly（只读放行）/ allow_all（全放行）。</summary>
     public string DefaultPermissionPolicy { get; set; } = "operator";
 
+    /// <summary>不指定会话名时使用的固定会话名（默认 "default"，同一窗口复用；留空则每次新建会话）。</summary>
+    public string DefaultSessionName { get; set; } = "default";
+
     /// <summary>派活等待超时（秒）。</summary>
     public int PromptTimeoutSec { get; set; } = 300;
 

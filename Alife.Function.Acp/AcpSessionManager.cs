@@ -155,6 +155,29 @@ public sealed class AcpSessionManager : IAsyncDisposable
         return session;
     }
 
+    /// <summary>按命名会话名查找磁盘上未关闭的持久化会话并加载（跨重启复用同一窗口）。</summary>
+    public async Task<ActiveSession?> LoadPersistedSessionAsync(string agentName, string sessionName, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(sessionName)) return null;
+
+        var file = FindPersistedFile(agentName, sessionName);
+        if (file == null || string.IsNullOrEmpty(file.SessionId)) return null;
+
+        if (active.TryGetValue(file.SessionId, out var existing)) return existing;
+        return await LoadSessionAsync(agentName, file.SessionId, file.Cwd, ct).ConfigureAwait(false);
+    }
+
+    SessionFile? FindPersistedFile(string agentName, string sessionName)
+    {
+        string safeAgent = Sanitize(agentName);
+        string dir = Path.Combine(sessionRoot, safeAgent, "sessions");
+        if (!Directory.Exists(dir)) return null;
+        return Directory.EnumerateFiles(dir, "*.json")
+            .Select(f => { try { return JsonSerializer.Deserialize<SessionFile>(File.ReadAllText(f)); } catch { return null; } })
+            .FirstOrDefault(x => x != null
+                && string.Equals(x.Name, sessionName, StringComparison.OrdinalIgnoreCase)
+                && string.IsNullOrEmpty(x.ClosedAt));
+    }
     /// <summary>按命名会话名或 sessionId 查找活动会话。</summary>
     public ActiveSession? FindSession(string nameOrId)
     {

@@ -102,12 +102,12 @@ public class AcpService(
     }
 
     [XmlFunction(FunctionMode.Content)]
-    [Description("派活给编码 agent：新建或复用命名会话，发送任务（建议 ACP 简报格式），等待结果")]
+    [Description("派活给编码 agent：复用固定/命名会话（同一窗口），发送任务（建议 ACP 简报格式），等待结果")]
     public async Task 派活(
         XmlExecutorContext context,
         [XmlContent] string 任务,
         [Description("agent 名，默认 codex")] string agent = "codex",
-        [Description("命名会话名；同名会话会复用上下文继续干")] string 会话名 = "",
+        [Description("会话名；同名会话会复用同一窗口（不传则用配置的固定会话）")] string 会话名 = "",
         [Description("权限策略：operator（默认，每步审批）/allow_readonly（只读放行）/allow_all（全放行）")] string 权限 = "",
         [Description("期望交付格式，如：返回改动清单与验证方式")] string 验收标准 = "")
     {
@@ -119,15 +119,23 @@ public class AcpService(
             return;
         }
 
-        ActiveSession? session = null;
-        if (string.IsNullOrEmpty(会话名) == false)
-            session = Manager.FindSession(会话名);
+        // 不指定会话名时，默认复用固定窗口（DefaultSessionName）；留空则每次新建会话
+        string name = string.IsNullOrWhiteSpace(会话名) ? Configuration.DefaultSessionName : 会话名.Trim();
 
-        string name = session?.File.Name ?? 会话名;
+        ActiveSession? session = null;
+        if (string.IsNullOrWhiteSpace(name) == false)
+        {
+            // 1) 内存中的活动会话（本窗口）
+            session = Manager.FindSession(name);
+            // 2) 内存没有 → 从磁盘加载同名未关闭会话（跨重启复用同一窗口）
+            if (session == null)
+                session = await Manager.LoadPersistedSessionAsync(agent, name, DestroyCancellationToken).ConfigureAwait(false);
+        }
+
         if (session == null)
         {
             string dir = Manager.ResolveCwd(null, agent);
-            session = await Manager.NewSessionAsync(agent, name, dir, 权限, DestroyCancellationToken).ConfigureAwait(false);
+            session = await Manager.NewSessionAsync(agent, string.IsNullOrWhiteSpace(name) ? null : name, dir, 权限, DestroyCancellationToken).ConfigureAwait(false);
         }
         else
         {
